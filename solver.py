@@ -15,16 +15,21 @@ def txtFileReader(file_name):
 
 #counts all occurences of the letters
 #returns the counts of all characters
-def charCounter(words):
+def charCounter(words, generateMode):
     char_counts = np.zeros(26, dtype= int)
 
-    #iterate through the entire file to count the occurences of all letters
-    for i in range(len(words)):
-        for j in range(5):
-            char_counts[ord(words[i][j])-97] += 1
+    if(generateMode):
+        #iterate through the entire file to count the occurences of all letters
+        for i in range(len(words)):
+            for j in range(5):
+                char_counts[ord(words[i][j])-97] += 1
 
-    #display the character counts
-    print(char_counts)
+        #display the character counts
+        print(char_counts)
+
+    else:
+        for i in range(5):
+            char_counts[ord(words[i])-97] += 1
 
     return char_counts
 
@@ -54,8 +59,15 @@ def excelFileReader(file_name):
 #solves the game of wordle
 def solver(exceldata):
     sorted = np.sort(exceldata, order=["scores"], kind="mergesort")[::-1]
-    
+    tempNoRepeats = []
 
+    for i in range(len(sorted)):
+        if (all(count < 2 for count in charCounter(sorted["words"][i], False))):
+            tempNoRepeats.append((sorted["words"][i],sorted["scores"][i]))
+
+    noRepeats = np.asarray(tempNoRepeats, dtype=np.dtype([("words",np.unicode_,8),("scores",np.int_)]))
+    print(len(noRepeats))
+    
 def main():
     txt_file_name = Path('files/Library.txt')
     csv_file_name = Path("files/word_scores.csv")
@@ -63,7 +75,7 @@ def main():
     #generates the excel sheet with scores if the file does not exist
     if(csv_file_name.is_file() == False):
         words = txtFileReader(txt_file_name)
-        char_score = charCounter(words)
+        char_score = charCounter(words, True)
         generateExcel(words, char_score, csv_file_name)
     else:
         print("[FILE HAS ALREADY BEEN GENERATED, NOW TRYING TO SOLVE]")
