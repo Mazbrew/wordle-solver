@@ -152,6 +152,7 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
     return grey, yellow, green, regex
 
+#game end condition
 def winLoseGame():
     print("Continue ? [Y/N]")
     user_input = input()
@@ -162,6 +163,7 @@ def winLoseGame():
     else:
         exit()
 
+#main loop
 def main():
     #generates the excel sheet with scores if the file does not exist
     if(csv_file_name.is_file() == False):
@@ -174,7 +176,9 @@ def main():
     solver(exceldata)
 
 
+#defining the global variables
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
 exceldata = excelFileReader(csv_file_name)
+#running the main loop
 main()
