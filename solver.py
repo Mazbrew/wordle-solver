@@ -1,6 +1,7 @@
 import numpy as np
 import csv
 import re
+import os
 
 from pathlib import Path
 
@@ -61,6 +62,7 @@ def excelFileReader(file_name):
 def solver(exceldata):
     sorted = np.sort(exceldata, order=["scores"], kind="mergesort")[::-1]
     temp = []
+    start_using_repeats = False
 
     for i in range(len(sorted)):
         if (all(count < 2 for count in charCounter(sorted["words"][i], False))):
@@ -83,7 +85,8 @@ def solver(exceldata):
             if(r.match(noRepeats["words"][i])):
                 temp.append((noRepeats["words"][i], noRepeats["scores"][i]))
 
-        if(len(temp) == 0):
+        if(len(temp) == 0 or start_using_repeats == True):
+            start_using_repeats = True
             for i in range(len(sorted)):
                 if(r.match(sorted["words"][i])):
                     temp.append((sorted["words"][i], sorted["scores"][i]))
@@ -97,6 +100,8 @@ def solver(exceldata):
             for i in range(len(guesses_output)):
                 print(guesses_output[i])
 
+    winLoseGame()
+
 #generates the regular expression to filter through the wordle accepted words list
 #returns the grey, yellow and greens letters followed by the regular expression
 def regexGen(grey, yellow, green, guess_count, guess):
@@ -104,9 +109,11 @@ def regexGen(grey, yellow, green, guess_count, guess):
         regex = re.compile('^[\w][\w][\w][\w][\w]')
     else:
         print("\nInput the color codes in a single line [NO SPACES]\n\t0: Grey\n\t1: Yellow\n\t2: Green\n")
+
         codes = input()
 
-        print("codes "+codes)
+        if (codes == "22222"):
+            winLoseGame()
 
         regex = "^"
 
@@ -120,8 +127,6 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
             elif(codes[i] == "2"):
                 green += str(guess[0][0][i])
-
-        print(yellow)
 
         yellow[0] = ''.join(sorted(yellow[0]))
         yellow[0] = re.sub(r'([a-z])\1+', r'\1', yellow[0])
@@ -147,10 +152,17 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
     return grey, yellow, green, regex
 
-def main():
-    txt_file_name = Path('files/Library.txt')
-    csv_file_name = Path("files/word_scores.csv")
+def winLoseGame():
+    print("Continue ? [Y/N]")
+    user_input = input()
 
+    if(user_input == "Y" or user_input == "y"):
+        os.system('cls')
+        solver(exceldata)
+    else:
+        exit()
+
+def main():
     #generates the excel sheet with scores if the file does not exist
     if(csv_file_name.is_file() == False):
         words = txtFileReader(txt_file_name)
@@ -159,7 +171,10 @@ def main():
     else:
         print("[FILE HAS ALREADY BEEN GENERATED, NOW TRYING TO SOLVE]")
 
-    exceldata = excelFileReader(csv_file_name)
     solver(exceldata)
 
+
+txt_file_name = Path('files/Library.txt')
+csv_file_name = Path("files/word_scores.csv")
+exceldata = excelFileReader(csv_file_name)
 main()
