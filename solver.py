@@ -59,17 +59,20 @@ def excelFileReader(file_name):
     return data
 
 #solves the game of wordle using statistical analysis and regular expressions
-def solver(exceldata):
-    sorted = np.sort(exceldata, order=["scores"], kind="mergesort")[::-1]
-    temp = []
-    start_using_repeats = False
 
-    for i in range(len(sorted)):
-        if (all(count < 2 for count in charCounter(sorted["words"][i], False))):
-            temp.append((sorted["words"][i],sorted["scores"][i]))
+def genDicts():
+    temp = []
+    wholeDict = np.sort(exceldata, order=["scores"], kind="mergesort")[::-1]
+
+    for i in range(len(wholeDict)):
+        if (all(count < 2 for count in charCounter(wholeDict["words"][i], False))):
+            temp.append((wholeDict["words"][i],wholeDict["scores"][i]))
 
     noRepeats = np.asarray(temp, dtype=np.dtype([("words",np.unicode_,8), ("scores",np.int_)]))
-    
+
+    return wholeDict, noRepeats
+
+def solver(exceldata):    
     grey = ""
     yellow = ["","","","","",""]
     green = ""
@@ -85,11 +88,11 @@ def solver(exceldata):
             if(r.match(noRepeats["words"][i])):
                 temp.append((noRepeats["words"][i], noRepeats["scores"][i]))
 
-        if(len(temp) == 0 or start_using_repeats == True):
-            start_using_repeats = True
-            for i in range(len(sorted)):
-                if(r.match(sorted["words"][i])):
-                    temp.append((sorted["words"][i], sorted["scores"][i]))
+        if(len(temp) == 0):
+            print("wholeDict is being used")
+            for i in range(len(wholeDict)):
+                if(r.match(wholeDict["words"][i])):
+                    temp.append((wholeDict["words"][i], wholeDict["scores"][i]))
 
         guesses_output = np.asarray(temp, dtype=np.dtype([("words",np.unicode_,8), ("scores",np.int_)]))
 
@@ -173,6 +176,7 @@ def main():
     else:
         print("[FILE HAS ALREADY BEEN GENERATED, NOW TRYING TO SOLVE]")
 
+    
     solver(exceldata)
 
 
@@ -180,5 +184,6 @@ def main():
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
 exceldata = excelFileReader(csv_file_name)
-#running the main loop
+wholeDict, noRepeats = genDicts()
+#runs the main loop
 main()
