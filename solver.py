@@ -58,8 +58,8 @@ def excelFileReader(file_name):
 
     return data
 
-#solves the game of wordle using statistical analysis and regular expressions
-
+#generates the dictiionary of words used by the wordle solver
+#returns the whole dictionary and the dictionary with repeated chars removed
 def genDicts():
     temp = []
     wholeDict = np.sort(exceldata, order=["scores"], kind="mergesort")[::-1]
@@ -72,6 +72,7 @@ def genDicts():
 
     return wholeDict, noRepeats
 
+#solves the game of wordle using statistical analysis and regular expressions
 def solver(exceldata):    
     grey = ""
     yellow = ["","","","","",""]
