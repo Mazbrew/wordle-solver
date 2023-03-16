@@ -177,9 +177,7 @@ def main():
     else:
         print("[FILE HAS ALREADY BEEN GENERATED, NOW TRYING TO SOLVE]")
 
-    
     solver(exceldata)
-
 
 #defining the global variables
 txt_file_name = Path('files/Library.txt')
