@@ -1,7 +1,10 @@
 import numpy as np
 import csv
 import re
-import os
+import screen_reader as sr
+import bot
+import time
+
 
 from pathlib import Path
 
@@ -78,6 +81,7 @@ def solver(exceldata):
     yellow = ["","","","","",""]
     green = ""
     guesses_output = []
+    repeats = False
 
     for x in range(6):
         temp = []
@@ -89,20 +93,16 @@ def solver(exceldata):
             if(r.match(noRepeats["words"][i])):
                 temp.append((noRepeats["words"][i], noRepeats["scores"][i]))
 
-        if(len(temp) == 0):
-            print("wholeDict is being used")
+        if(len(temp) == 0 or repeats == True):
+            repeats = True
             for i in range(len(wholeDict)):
                 if(r.match(wholeDict["words"][i])):
                     temp.append((wholeDict["words"][i], wholeDict["scores"][i]))
 
         guesses_output = np.asarray(temp, dtype=np.dtype([("words",np.unicode_,8), ("scores",np.int_)]))
 
-        if(len(guesses_output) > 4):
-            for i in range(5):
-                print(guesses_output[i])
-        else:
-            for i in range(len(guesses_output)):
-                print(guesses_output[i])
+        bot.pressString(guesses_output[0][0])
+        guesses_output = guesses_output[0][0]
 
     winLoseGame()
 
@@ -112,9 +112,15 @@ def regexGen(grey, yellow, green, guess_count, guess):
     if(guess_count == 0):
         regex = re.compile('^[\w][\w][\w][\w][\w]')
     else:
-        print("\nInput the color codes in a single line [NO SPACES]\n\t0: Grey\n\t1: Yellow\n\t2: Green\n")
+        codes = ""
 
-        codes = input()
+        if(mode == "maz"):
+            time.sleep(0.1)
+        elif(mode == "ny"):
+            time.sleep(3)
+
+        for i in range(5):
+            codes = codes + sr.getPixelCode(points[guess_count-1][i])
 
         if (codes == "22222"):
             winLoseGame()
@@ -123,19 +129,34 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
         for i in range(5):
             if(codes[i] == "0"):
-                grey += str(guess[0][0][i])
+                grey += str(guess[i])
             elif(codes[i] == "1" or (len(yellow[i+1]) !=0 and codes[i] != "2")):
-                yellow[0] += str(guess[0][0][i])
+                yellow[0] += str(guess[i])
 
-                yellow[i+1] += str(guess[0][0][i])
+                yellow[i+1] += str(guess[i])
 
             elif(codes[i] == "2"):
-                green += str(guess[0][0][i])
+                green += str(guess[i])
 
         yellow[0] = ''.join(sorted(yellow[0]))
         yellow[0] = re.sub(r'([a-z])\1+', r'\1', yellow[0])
 
         if(len(grey) > 0):
+            rerun = True
+
+            while rerun:
+                rerun = False
+                for i in range(len(grey)):
+                    for j in range(len(green)):
+                        if(grey[i] == green[j]):
+                            pattern = "[" + green + "]"
+                            grey = re.sub(pattern, '', grey)
+                            rerun = True
+                            break
+                    
+                    if(rerun == True):
+                        break
+                
             regex += "(?!.*[" + grey + "])"
 
         for i in range(len(yellow[0])):
@@ -143,30 +164,31 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
         for i in range(5):
             if (codes[i] == "0"):
-                regex += "[\w]"
+                if(len(grey)>0):
+                    regex += "[^" + grey + "]"
+                else:
+                    regex += "[\w]"
             elif (codes[i] == "1"):
-                regex += "[^" + yellow[i+1] + "]"
+                regex += "[^" + yellow[i+1] + grey + "]"
             elif (codes[i] == "2"):
-                regex += "[" + str(guess[0][0][i]) + "]"
+                regex += "[" + str(guess[i]) + "]"
 
                 for j in range(6):
-                    yellow[j] = yellow[j].replace(str(guess[0][0][i]),"")
-        
-        print(regex)
+                    yellow[j] = yellow[j].replace(str(guess[i]),"")
 
     return grey, yellow, green, regex
 
 #game end condition
 def winLoseGame():
-    print("Continue ? [Y/N]")
-    user_input = input()
-
-    if(user_input == "Y" or user_input == "y"):
-        os.system('cls')
-        solver(exceldata)
+    if(play_again == True and mode == "maz"):
+        bot.restart()
+        main()
+    elif(mode == "ny"):
+        exit(0)
     else:
-        exit()
+        exit(0)
 
+    
 #main loop
 def main():
     #generates the excel sheet with scores if the file does not exist
@@ -174,15 +196,23 @@ def main():
         words = txtFileReader(txt_file_name)
         char_score = charCounter(words, True)
         generateExcel(words, char_score, csv_file_name)
-    else:
-        print("[FILE HAS ALREADY BEEN GENERATED, NOW TRYING TO SOLVE]")
 
     solver(exceldata)
 
 #defining the global variables
+make_image = False
+mode = "maz"
+play_again = True
+
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
 exceldata = excelFileReader(csv_file_name)
 wholeDict, noRepeats = genDicts()
+points = sr.findPoints(make_image, mode)
+
+click_point = points[0][0]
+bot.focus(click_point)
+bot.restart()
+
 #runs the main loop
 main()

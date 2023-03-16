@@ -5,34 +5,10 @@ import math
 from PIL import ImageGrab as IG
 from pynput import keyboard
 
-def on_release(key):
-   if key == keyboard.Key.f9:
-      print("[STARTING FOR MAZDLE]")
-      points = findPoints(True, "maz")
-
-      for i in range(6):
-         string = ""
-         for j in range(5):
-            string = string + getPixelCode(points[i][j])
-
-         print(string)
-
-   elif key == keyboard.Key.f10:
-      print("[STARTING FOR NYTIMES]")
-      points = findPoints(True, "ny")
-
-      for i in range(6):
-         string = ""
-         for j in range(5):
-            string = string + getPixelCode(points[i][j])
-
-         print(string)
-
-
 #finds all the relevant points on the wordle board
 #relevant points are the points in which the tile status can be read without being obstructed by the letters
 #returns all the relevant points
-def findPoints(makeImage, mode):
+def findPoints(make_image, mode):
    #using PIL to grab the sccreen
    screen_image = IG.grab(bbox= None)
 
@@ -72,18 +48,18 @@ def findPoints(makeImage, mode):
             #detecting if the contour point is a duplicate
             duplicate = False
             for dupes in range(len(points)):
-               if(x+5 == points[dupes][0] and y+5 == points[dupes][1]) or (x+5 in range(points[dupes][0]- int(points[dupes][0]*0.05), points[dupes][0]+ int(points[dupes][0]*0.05)) and y+5 in range(points[dupes][1]- int(points[dupes][1]*0.05), points[dupes][1]+ int(points[dupes][1]*0.05))):
+               if(x+3 == points[dupes][0] and y+3 == points[dupes][1]) or (x+3 in range(points[dupes][0]- int(points[dupes][0]*0.05), points[dupes][0]+ int(points[dupes][0]*0.05)) and y+3 in range(points[dupes][1]- int(points[dupes][1]*0.05), points[dupes][1]+ int(points[dupes][1]*0.05))):
                   duplicate = True
 
             #only append if the contour point is not a duplicate
             if(duplicate == False):
-               points.append([x+5, y+5])
+               points.append([x+3, y+3])
 
-            if(makeImage == True and duplicate == False):
+            if(make_image == True and duplicate == False):
                #drawing out the relevant points
                img = cv2.drawContours(img, [cnt], -1, (0,255,0), 1)
-               img = cv2.circle(img, [x+5,y+5], 2, (0,0,255), -1)
-               img = cv2.putText(img,str(x+5)+ " "+ str(y+5),[x+5,y+5],fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale= 0.50, color=(255,0,255), thickness=1)
+               img = cv2.circle(img, [x+3,y+3], 2, (0,0,255), -1)
+               img = cv2.putText(img,str(x+3)+ " "+ str(y+3),[x+3,y+3],fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale= 0.50, color=(255,0,255), thickness=1)
 
    #reversing the tuple for ease of use in the main code
    points.reverse()
@@ -113,7 +89,7 @@ def findPoints(makeImage, mode):
                points[i][j+1][0] = temp
 
    #display the image holding the relevant points if the function is set to True
-   if(makeImage == True):
+   if(make_image == True):
       cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
       cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
       cv2.imshow("window", img)
@@ -153,6 +129,3 @@ def getPixelCode(point):
       return "2"
    else:
       return "1"
-   
-with keyboard.Listener(on_press=None, on_release=on_release) as listener:
-    listener.join()
