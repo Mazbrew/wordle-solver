@@ -3,11 +3,36 @@ import PIL
 import numpy as np
 import math
 from PIL import ImageGrab as IG
+from pynput import keyboard
+
+def on_release(key):
+   if key == keyboard.Key.f9:
+      print("[STARTING FOR MAZDLE]")
+      points = findPoints(True, "maz")
+
+      for i in range(6):
+         string = ""
+         for j in range(5):
+            string = string + getPixelCode(points[i][j])
+
+         print(string)
+
+   elif key == keyboard.Key.f10:
+      print("[STARTING FOR NYTIMES]")
+      points = findPoints(True, "ny")
+
+      for i in range(6):
+         string = ""
+         for j in range(5):
+            string = string + getPixelCode(points[i][j])
+
+         print(string)
+
 
 #finds all the relevant points on the wordle board
 #relevant points are the points in which the tile status can be read without being obstructed by the letters
 #returns all the relevant points
-def findPoints(makeImage):
+def findPoints(makeImage, mode):
    #using PIL to grab the sccreen
    screen_image = IG.grab(bbox= None)
 
@@ -21,8 +46,14 @@ def findPoints(makeImage):
    #applying a threshold, if the image rgb value is above a certain threshold set the pixel value to 1 else 0
    #55 70 for nytimes
    #150 150 for mazdle
-   ret,thresh = cv2.threshold(gray,55,70,0)
-
+   #defaults to mazdle if mode is invalid
+   if(mode == "ny"):
+      ret,thresh = cv2.threshold(gray,55,70,0)
+   elif(mode == "maz"):
+      ret,thresh = cv2.threshold(gray,150,150,0)
+   else:
+      ret,thresh = cv2.threshold(gray,150,150,0)
+   
    #obtaining all the contour points
    contours,hierarchy = cv2.findContours(thresh, 1, 2)
 
@@ -56,8 +87,6 @@ def findPoints(makeImage):
 
    #reversing the tuple for ease of use in the main code
    points.reverse()
-
-   print(len(points))
 
    if(len(points) != 30):
       print("[WORDLE BOARD NOT DETECTED]")
@@ -125,12 +154,5 @@ def getPixelCode(point):
    else:
       return "1"
    
-
-points = findPoints(False)
-
-for i in range(6):
-   string = ""
-   for j in range(5):
-      string = string + getPixelCode(points[i][j])
-
-   print(string)
+with keyboard.Listener(on_press=None, on_release=on_release) as listener:
+    listener.join()
