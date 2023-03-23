@@ -5,6 +5,7 @@ import screen_reader as sr
 import bot
 import time
 import os
+import sys
 
 from pathlib import Path
 
@@ -77,7 +78,7 @@ def genDicts():
 
 #solves the game of wordle using statistical analysis and regular expressions
 def solver(exceldata):    
-    grey = ""
+    grey = ["","","","","",""]
     yellow = ["","","","","",""]
     green = ""
     guesses_output = []
@@ -134,10 +135,11 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
         for i in range(5):
             if(codes[i] == "0"):
-                grey += str(guess[i])
+                grey[0] += str(guess[i])
+                grey[i+1] += str(guess[i])
+
             elif(codes[i] == "1" or (len(yellow[i+1]) !=0 and codes[i] != "2")):
                 yellow[0] += str(guess[i])
-
                 yellow[i+1] += str(guess[i])
 
             elif(codes[i] == "2"):
@@ -146,35 +148,27 @@ def regexGen(grey, yellow, green, guess_count, guess):
         yellow[0] = ''.join(sorted(yellow[0]))
         yellow[0] = re.sub(r'([a-z])\1+', r'\1', yellow[0])
 
-        if(len(grey) > 0):
-            rerun = True
-
-            while rerun:
-                rerun = False
-                for i in range(len(grey)):
-                    for j in range(len(green)):
-                        if(grey[i] == green[j]):
-                            pattern = "[" + green + "]"
-                            grey = re.sub(pattern, '', grey)
-                            rerun = True
-                            break
-                    
-                    if(rerun == True):
-                        break
-                
-            regex += "(?!.*[" + grey + "])"
-
-        for i in range(len(yellow[0])):
-            regex += "(?=.*" + yellow[0][i] + ")"
+        if(len(grey[0]) > 0 and len(green) > 0):
+            pattern = "[" + green + "]"
+            grey[0] = re.sub(pattern, '', grey[0])
+                                            
+            regex += "(?!.*[" + grey[0] + "])"
+        elif(len(grey[0]) > 0 and len(yellow[0]) > 0):
+            pattern = "[" + yellow[0] + "]"
+            grey[0] = re.sub(pattern, '', grey[0])
+                                            
+            regex += "(?!.*[" + grey[0] + "])"
+        else:
+            regex += "(?!.*[" + grey[0] + "])"
 
         for i in range(5):
             if (codes[i] == "0"):
-                if(len(grey)>0):
-                    regex += "[^" + grey + "]"
+                if(len(grey[i+1])>0):
+                    regex += "[^" + grey[i+1] + "]"
                 else:
                     regex += "[\w]"
             elif (codes[i] == "1"):
-                regex += "[^" + yellow[i+1] + grey + "]"
+                regex += "[^" + yellow[i+1] + grey[i+1] + "]"
             elif (codes[i] == "2"):
                 regex += "[" + str(guess[i]) + "]"
 
@@ -217,11 +211,13 @@ def main():
 
 #defining the global variables
 make_image = False
-mode = "maz"
+mode = "ny"
 play_again = True
 
 lose = 0
 win = 0
+
+sys.setrecursionlimit(5000)
 
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
