@@ -63,6 +63,7 @@ def findPoints(make_image, mode):
 
    #reversing the tuple for ease of use in the main code
    points.reverse()
+   print(len(points))
 
    if(len(points) != 30):
       print("[WORDLE BOARD NOT DETECTED]")

@@ -4,7 +4,7 @@ import re
 import screen_reader as sr
 import bot
 import time
-
+import os
 
 from pathlib import Path
 
@@ -86,6 +86,11 @@ def solver(exceldata):
     for x in range(6):
         temp = []
 
+        if(mode == "maz"):
+            time.sleep(0.1)
+        elif(mode == "ny"):
+            time.sleep(3)
+
         grey, yellow, green, regex = regexGen(grey, yellow, green, x, guesses_output)
         r = re.compile(regex)
         
@@ -104,7 +109,15 @@ def solver(exceldata):
         bot.pressString(guesses_output[0][0])
         guesses_output = guesses_output[0][0]
 
-    winLoseGame()
+    winLoseGame(5)
+
+def getCode(guess_count):
+    codes = ""
+
+    for i in range(5):
+        codes = codes + sr.getPixelCode(points[guess_count-1][i])
+
+    return codes
 
 #generates the regular expression to filter through the wordle accepted words list
 #returns the grey, yellow and greens letters followed by the regular expression
@@ -112,18 +125,10 @@ def regexGen(grey, yellow, green, guess_count, guess):
     if(guess_count == 0):
         regex = re.compile('^[\w][\w][\w][\w][\w]')
     else:
-        codes = ""
-
-        if(mode == "maz"):
-            time.sleep(0.1)
-        elif(mode == "ny"):
-            time.sleep(3)
-
-        for i in range(5):
-            codes = codes + sr.getPixelCode(points[guess_count-1][i])
+        codes = getCode(guess_count)
 
         if (codes == "22222"):
-            winLoseGame()
+            winLoseGame(guess_count)
 
         regex = "^"
 
@@ -179,8 +184,19 @@ def regexGen(grey, yellow, green, guess_count, guess):
     return grey, yellow, green, regex
 
 #game end condition
-def winLoseGame():
+def winLoseGame(guess_count):
+    
     if(play_again == True and mode == "maz"):
+        if(getCode(guess_count) != "22222"):
+            global lose 
+            lose +=1
+        else:
+            global win
+            win +=1
+
+        os.system("cls")
+
+        print("WIN: " + repr(win) + "\tLOSE: " + repr(lose) + "\t WINRATE: " + repr(float(win/(win+lose) * 100)))
         bot.restart()
         main()
     elif(mode == "ny"):
@@ -203,6 +219,9 @@ def main():
 make_image = False
 mode = "maz"
 play_again = True
+
+lose = 0
+win = 0
 
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
