@@ -231,7 +231,9 @@ points = sr.findPoints(make_image, mode)
 
 click_point = points[0][0]
 bot.focus(click_point)
-bot.restart()
+
+if(mode == "maz"):
+    bot.restart()
 
 #runs the main loop
 main()
