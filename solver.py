@@ -209,17 +209,12 @@ def winLoseGame(guess_count):
     elif(mode == "ny"):
         exit(0)
     else:
-        exit(0)
+        exit(0) 
 
     
 #main loop
 def main():
     #generates the excel sheet with scores if the file does not exist
-    if(csv_file_name.is_file() == False):
-        words = txtFileReader(txt_file_name)
-        char_score = charCounter(words, True)
-        generateExcel(words, char_score, csv_file_name)
-
     solver(exceldata)
 
 #defining the global variables
@@ -227,17 +222,30 @@ make_image = False
 mode = "maz"
 play_again = True
 
+#setting up evaluation metrics
 lose = 0
 win = 0
 
 sys.setrecursionlimit(5000)
 
+#file paths
 txt_file_name = Path('files/Library.txt')
 csv_file_name = Path("files/word_scores.csv")
-exceldata = excelFileReader(csv_file_name)
-wholeDict, noRepeats = genDicts()
-points = sr.findPoints(make_image, mode)
 
+#detecting if the csv file exists, else generate a new one
+if(csv_file_name.is_file() == False):
+    words = txtFileReader(txt_file_name)
+    char_score = charCounter(words, True)
+    generateExcel(words, char_score, csv_file_name)
+
+#loading the excel data
+exceldata = excelFileReader(csv_file_name)
+
+#generating agents vocabulary
+wholeDict, noRepeats = genDicts()
+
+#detecting the bounding boxes of the wordle game
+points = sr.findPoints(make_image, mode)
 click_point = points[0][0]
 bot.focus(click_point)
 
