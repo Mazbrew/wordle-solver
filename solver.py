@@ -133,6 +133,7 @@ def regexGen(grey, yellow, green, guess_count, guess):
 
         regex = "^"
 
+        #putting all the tiles into their appropriate colours
         for i in range(5):
             if(codes[i] == "0"):
                 grey[0] += str(guess[i])
@@ -145,9 +146,11 @@ def regexGen(grey, yellow, green, guess_count, guess):
             elif(codes[i] == "2"):
                 green += str(guess[i])
 
+        #sorting all of the yellow tiles and removing duplicates within the yellow
         yellow[0] = ''.join(sorted(yellow[0]))
         yellow[0] = re.sub(r'([a-z])\1+', r'\1', yellow[0])
 
+        #very specific edge case where if there are duplicate letters one valid one invalid
         if(len(grey[0]) > 0 and len(green) > 0):
             pattern = "[" + green + "]"
             grey[0] = re.sub(pattern, '', grey[0])
@@ -161,10 +164,17 @@ def regexGen(grey, yellow, green, guess_count, guess):
         else:
             regex += "(?!.*[" + grey[0] + "])"
 
+
+        #creation of the positive lookahead for the yellow tiles
+        if(len(yellow[0])>0):
+            for i in range(len(yellow[0])):
+                regex += "(?=.*"+ yellow[0][i] +".*)"
+
+
         for i in range(5):
             if (codes[i] == "0"):
                 if(len(grey[i+1])>0):
-                    regex += "[^" + grey[i+1] + "]"
+                    regex += "[^" + yellow[i+1] + grey[i+1] + "]"
                 else:
                     regex += "[\w]"
             elif (codes[i] == "1"):
@@ -172,8 +182,11 @@ def regexGen(grey, yellow, green, guess_count, guess):
             elif (codes[i] == "2"):
                 regex += "[" + str(guess[i]) + "]"
 
+                #if it's yellow prior, remove it from yellow if it is now green
                 for j in range(6):
                     yellow[j] = yellow[j].replace(str(guess[i]),"")
+
+    print(regex)
 
     return grey, yellow, green, regex
 
@@ -211,7 +224,7 @@ def main():
 
 #defining the global variables
 make_image = False
-mode = "ny"
+mode = "maz"
 play_again = True
 
 lose = 0
