@@ -7,6 +7,7 @@ import time
 import os
 import sys
 
+from datetime import datetime
 from pathlib import Path
 
 #reads the text file and stores it into a variable
@@ -194,37 +195,54 @@ def regexGen(grey, yellow, green, guess_count, guess):
 def winLoseGame(guess_count):
     
     if(play_again == True and mode == "maz"):
+        global total_guess_count
         if(getCode(guess_count) != "22222"):
             global lose 
             lose +=1
+
+            total_guess_count += 7
         else:
             global win
             win +=1
 
+            total_guess_count += (guess_count + 1)
+
         os.system("cls")
 
-        print("WIN: " + repr(win) + "\tLOSE: " + repr(lose) + "\t WINRATE: " + repr(float(win/(win+lose) * 100)))
-        bot.restart()
-        main()
+        print("WIN: " + repr(win) + "\tLOSE: " + repr(lose) + "\t WINRATE: " + repr(float(win/(win+lose) * 100)) + "\tAVERAGE NO. GUESSES: " +repr(float(total_guess_count/(win+lose))))\
+
+        if(win+lose == number_of_games):
+            end_time =datetime.now()
+            print("Total Time: {}".format(end_time-start_time))
+            exit(0)
+        else:
+            bot.restart()
+            solver(exceldata)
+
     elif(mode == "ny"):
+        end_time =datetime.now()
+        print("Total Time: {}".format(end_time-start_time))
         exit(0)
     else:
+        end_time =datetime.now()
+        print("Total Time: {}".format(end_time-start_time))
         exit(0) 
 
-    
-#main loop
-def main():
-    #generates the excel sheet with scores if the file does not exist
-    solver(exceldata)
 
 #defining the global variables
+#change these variables if you want to test it out
 make_image = False
-mode = "maz"
-play_again = True
+
+#modes can either be "maz" or "ny"
+mode = "ny"
+play_again = False
+number_of_games = 100
 
 #setting up evaluation metrics
 lose = 0
 win = 0
+total_guess_count = 0
+
 
 sys.setrecursionlimit(5000)
 
@@ -252,5 +270,7 @@ bot.focus(click_point)
 if(mode == "maz"):
     bot.restart()
 
-#runs the main loop
-main()
+#runs the solving loop
+start_time = datetime.now()
+solver(exceldata)
+
